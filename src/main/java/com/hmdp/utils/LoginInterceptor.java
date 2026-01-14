@@ -21,42 +21,15 @@ import static com.hmdp.utils.RedisConstants.LOGIN_USER_TTL;
 
 public class LoginInterceptor implements HandlerInterceptor {
 
-    private StringRedisTemplate stringRedisTemplate;
-
-    public LoginInterceptor(StringRedisTemplate stringRedisTemplate){
-        this.stringRedisTemplate=stringRedisTemplate;
-    }
-
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-//        获取请求头的token
-        String token=request.getHeader("authorization");
-        if(StrUtil.isBlank(token)){
-//          不存在，拦截
-        response.setStatus(401);
-        return false;
-        }
-//        基于token获取redis中的用户
-        Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(LOGIN_USER_KEY+token);
-//        判断用户是否存在
-        if(entries.isEmpty()){
-//        不存在，拦截
+//        判断是否需要拦截
+        if (UserHolder.getUser() == null) {
+//         没有用户，拦截
             response.setStatus(401);
             return false;
         }
-//        将查询到的Hash转为UserDTO对象
-        UserDTO userDTO = BeanUtil.fillBeanWithMap(entries, new UserDTO(), false);
-//        存在，保存用户信息到ThreadLocal
-        UserHolder.saveUser(userDTO);
-//        刷新token有效期
-        stringRedisTemplate.expire(LOGIN_USER_KEY+token,LOGIN_USER_TTL, TimeUnit.SECONDS);
-//        放行
+//        有用户，放行
         return HandlerInterceptor.super.preHandle(request, response, handler);
-    }
-
-    @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable Exception ex) throws Exception {
-        HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
-        UserHolder.removeUser();
     }
 }
