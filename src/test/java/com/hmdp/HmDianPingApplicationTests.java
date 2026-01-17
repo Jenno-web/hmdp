@@ -49,6 +49,7 @@ class HmDianPingApplicationTests {
     void lock(){
         SimpleRedisLock simpleRedisLock=new SimpleRedisLock("u1",stringRedisTemplate);
         simpleRedisLock.tryLock(100);
+        simpleRedisLock.unlock();
     }
 
     @Test
