@@ -98,8 +98,9 @@ public class CacheClient {
 //                    重建缓存
 //                        查数据库
                         R rl=dbFallback.apply(id);
+
 //                        存redis
-                        this.setWithLogicalExpire(keyPrefix,rl,time,unit);
+                        this.setWithLogicalExpire(keyPrefix+id,rl,time,unit);
                     } catch (Exception e){
                         throw new RuntimeException();
                     } finally {
@@ -125,8 +126,9 @@ public class CacheClient {
 //            返回错误
             return null;
         }
+
 //        数据库中存在，写入redis
-        stringRedisTemplate.opsForValue().set(keyPrefix+id,JSONUtil.toJsonStr(r),time, unit);
+        this.setWithLogicalExpire(keyPrefix+id,r,time,unit);
 //        返回
         return r;
     }
